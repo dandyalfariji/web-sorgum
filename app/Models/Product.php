@@ -24,6 +24,7 @@ class Product extends Model
         'images',
         'rating',
         'category',
+        'is_active',
     ];
 
     /**
@@ -34,5 +35,6 @@ class Product extends Model
     protected $casts = [
         'images' => 'array',
         'price' => 'decimal:2',
+        'is_active' => 'boolean',
     ];
 }

@@ -10,6 +10,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Utilities\Set;
 
 class ProductForm
@@ -44,8 +45,7 @@ class ProductForm
                                     ->label('Gambar Utama')
                                     ->image()
                                     ->directory('products')
-                                    ->disk('public')
-                                    ->required(),
+                                    ->disk('public'),
 
                                 FileUpload::make('images')
                                     ->label('Galeri Gambar')
@@ -84,6 +84,16 @@ class ProductForm
                                     ->minValue(1)
                                     ->maxValue(5)
                                     ->default(5.0),
+                            ]),
+                        Section::make('Status')
+                            ->schema([
+                                Toggle::make('is_active')
+                                    ->label('Aktifkan Produk')
+                                    ->default(true)
+                                    ->inline(false)
+                                    ->onColor('success')
+                                    ->offColor('secondary')
+                                    ->helperText('Toggel ini untuk mengaktifkan atau menonaktifkan produk. Jika dinonaktifkan, produk tidak akan terlihat oleh pelanggan.')
                             ]),
                     ])->columnSpan(1),
             ])->columns(3);

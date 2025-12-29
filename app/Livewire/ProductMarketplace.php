@@ -71,7 +71,8 @@ class ProductMarketplace extends Component
             });
         }
 
-        $products = $query->latest()->paginate($this->perPage);
+        $products = $query->where('is_active', true)
+            ->latest()->paginate($this->perPage);
 
         return view('livewire.product-marketplace', [
             'products' => $products,

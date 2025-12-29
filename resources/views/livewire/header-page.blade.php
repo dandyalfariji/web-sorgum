@@ -21,7 +21,6 @@
             </div>
 
             @php
-                // Logic class tetap sama, sangat bagus!
                 $base = 'block py-2 pr-4 pl-3 rounded lg:p-0 transition-colors';
                 $hover = 'lg:hover:text-[#E31067]';
                 $on = 'text-[#0AA55A] font-semibold';
