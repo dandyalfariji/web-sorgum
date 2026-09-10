@@ -26,6 +26,7 @@ class ProductMarketplace extends Component
         $this->categories = Product::query()
             ->select('category')
             ->whereNotNull('category')
+            ->where('is_active', true)
             ->distinct()
             ->orderBy('category')
             ->pluck('category')

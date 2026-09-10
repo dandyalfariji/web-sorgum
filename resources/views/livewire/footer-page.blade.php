@@ -1,9 +1,9 @@
 <footer class="p-6 sm:p-8 bg-white dark:bg-[#071A15] border-t border-gray-200 dark:border-white/10">
     <div class="mx-auto max-w-screen-xl">
         @if ($footer)
-            <div class="md:flex md:justify-between md:items-start">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-12 md:items-start">
                 <!-- Brand -->
-                <div class="mb-8 md:mb-0">
+                <div class="md:col-span-5 lg:col-span-4 mb-8 md:mb-0">
                     <a href="/" class="flex items-center">
                         <img src="{{ asset('storage/' . $footer->logo_path) }}" class="mr-3 h-10 w-auto"
                             alt="{{ $footer->brand_name }} Logo" />
@@ -17,10 +17,10 @@
                 </div>
 
                 <!-- Kolom link (dinamis) -->
-                <div class="grid grid-cols-2 gap-8 sm:gap-10 sm:grid-cols-3">
+                <div class="md:col-span-7 lg:col-span-8 grid grid-cols-2 gap-4 sm:gap-10 sm:grid-cols-3">
                     @foreach ($footer->link_columns as $column)
-                        <div>
-                            <h2 class="mb-4 text-sm font-semibold uppercase text-[#0AA55A] dark:text-white">
+                        <div class="mb-2">
+                            <h2 class="mb-3 sm:mb-4 text-sm font-semibold uppercase text-[#0AA55A] dark:text-white">
                                 {{ $column['column_title'] }}
                             </h2>
                             @if (!empty($column['links']))

@@ -19,6 +19,7 @@ class Product extends Model
         'slug',
         'description',
         'price',
+        'variants',
         'stock',
         'image',
         'images',
@@ -34,6 +35,7 @@ class Product extends Model
      */
     protected $casts = [
         'images' => 'array',
+        'variants' => 'array',
         'price' => 'decimal:2',
         'is_active' => 'boolean',
     ];

@@ -59,14 +59,14 @@
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid md:grid-cols-2 items-center gap-8 xl:gap-16 py-10 sm:py-16">
                 @if ($heroData->mid_section_image_path)
-                    <div class="order-1">
+                    <div class="order-1 flex justify-center">
                         <img
-                            class="mx-auto h-auto max-w-[520px] w-full object-contain"
+                            class="mx-auto h-auto object-contain rounded-xl"
+                            style="max-width: 320px; width: 100%;"
                             src="{{ Storage::url($heroData->mid_section_image_path) }}"
                             alt="Logo halal"
                             loading="lazy"
-                            decoding="async"
-                            sizes="(min-width: 768px) 40vw, 90vw">
+                            decoding="async">
                     </div>
                 @endif
 
@@ -83,19 +83,41 @@
 
         {{-- CTA MARKETPLACE --}}
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-2xl mx-auto py-10 sm:py-16">
-                <h2 class="mb-4 text-3xl sm:text-4xl font-extrabold leading-tight text-gray-900 dark:text-white">
-                    {{ $heroData->cta_headline }}
-                </h2>
-                <p class="mb-6 font-light text-base md:text-lg text-gray-600 dark:text-[#CBD5E1]">
-                    {{ $heroData->cta_description }}
-                </p>
-                <a href="{{ $heroData->cta_button_url }}"
-                   class="inline-block text-white font-medium rounded-lg text-sm px-6 py-3
-                          focus:outline-none focus:ring-4"
-                   style="background-color:#E31067;--tw-ring-color:#FBD1E1">
-                    {{ $heroData->cta_button_text }}
-                </a>
+            <div class="py-16 sm:py-24 mt-8 relative overflow-hidden bg-[#0B221B] rounded-2xl shadow-2xl border border-emerald-900">
+                <div class="grid md:grid-cols-2 gap-8 items-center px-6 sm:px-10">
+                    <div class="text-center md:text-left z-10">
+                        <h2 class="mb-5 text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight text-white tracking-tight">
+                            {{ $heroData->cta_headline }}
+                        </h2>
+                        
+                        <p class="mb-10 font-light text-lg md:text-xl text-white leading-relaxed">
+                            {{ $heroData->cta_description }}
+                        </p>
+
+                        <div class="flex flex-col sm:flex-row justify-center md:justify-start items-center gap-4">
+                            <a href="{{ $heroData->cta_button_url }}"
+                               class="inline-flex items-center justify-center font-bold rounded-full text-base px-8 py-3.5 shadow-lg transition-transform hover:scale-105"
+                               style="background-color: #E31067; color: white; text-decoration: none; min-width: 180px; box-shadow: 0 4px 14px 0 rgba(227, 16, 103, 0.39);">
+                                {{ $heroData->cta_button_text }}
+                            </a>
+                        </div>
+                    </div>
+
+                    @if ($heroData->cta_image_path)
+                        <div class="flex justify-center z-10">
+                            <img src="{{ Storage::url($heroData->cta_image_path) }}" 
+                                 alt="CTA Image" 
+                                 class="w-auto h-auto max-w-[240px] max-h-[240px] object-contain rounded-xl shadow-md transition-transform hover:scale-105 duration-300 mx-auto">
+                        </div>
+                    @else
+                        <div class="flex justify-center z-10">
+                            {{-- Placeholder jika belum ada gambar yang diupload --}}
+                            <div class="w-full max-w-md aspect-square bg-[#081813] rounded-xl shadow-md flex items-center justify-center border-2 border-dashed border-emerald-800">
+                                <span class="text-white text-center px-4">Gambar CTA<br><small>(Upload via Admin)</small></span>
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     @else

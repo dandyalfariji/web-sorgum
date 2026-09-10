@@ -163,11 +163,7 @@
             <h2 class="mb-4 text-4xl tracking-tight font-extrabold text-[#0AA55A] dark:text-white">
                 Kandungan Baik Sorgummi
             </h2>
-            <p class="sm:text-xl text-gray-700 dark:text-[#CBD5E1] max-w-prose mx-auto">
-                Minuman sereal berbasis sorgum: lebih sehat, praktis, dan enak.
-                <b>Tinggi serat, bebas gluten, dan natrium rendah.</b>
-                Teman harian untuk energi yang nyaman di perut.
-            </p>
+
         </div>
 
         <!-- Container untuk grid fitur dinamis -->
