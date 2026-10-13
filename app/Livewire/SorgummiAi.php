@@ -2,126 +2,86 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
-use Illuminate\Support\Facades\Http;
+use App\Services\SorgummiAiService;
 use Illuminate\Support\Facades\Log;
+use Livewire\Component;
 
 class SorgummiAi extends Component
 {
-    public $message = '';
-    public $chatHistory = [];
-    public $isLoading = false;
+    public string $message = '';
 
-    public function mount()
+    /** @var array<int, array{role:string, content:string}> */
+    public array $chatHistory = [];
+
+    public bool $isLoading = false;
+
+    public function mount(): void
     {
-        $this->chatHistory = [
-            ['role' => 'model', 'content' => 'Halo! Saya Sorgummi AI 🌾 Asisten virtual Anda seputar sorgum, kesehatan, resep, dan produk Sorgummi. Ada yang bisa saya bantu hari ini?']
+        $this->chatHistory = [$this->greeting()];
+    }
+
+    protected function greeting(): array
+    {
+        return [
+            'role'    => 'model',
+            'content' => 'Halo! Saya Sorgummi AI 🌾 Asisten virtual Anda seputar sorgum, kesehatan, resep, dan produk Sorgummi. Ada yang bisa saya bantu hari ini?',
         ];
     }
 
-    public function sendMessage($text = null)
+    public function sendMessage($text = null): void
     {
-        $textToSend = $text ?? $this->message;
-        $textToSend = trim($textToSend);
+        $textToSend = trim((string) ($text ?? $this->message));
 
-        if (empty($textToSend)) {
+        if ($textToSend === '') {
             return;
         }
 
-        // Add user message to chat history
         $this->chatHistory[] = ['role' => 'user', 'content' => $textToSend];
         $this->message = '';
-
-        $apiKey = config('gemini.api_key');
-        $model = config('gemini.model', 'gemini-2.0-flash');
-
-        if (empty($apiKey)) {
-            $this->chatHistory[] = [
-                'role' => 'model',
-                'content' => '⚠️ API Key belum dikonfigurasi. Silakan tambahkan `GEMINI_API_KEY` di file `.env` Anda.'
-            ];
-            return;
-        }
-
-        // Build conversation contents for Gemini API
-        $contents = [];
-        foreach ($this->chatHistory as $chat) {
-            $contents[] = [
-                'role' => $chat['role'],
-                'parts' => [['text' => $chat['content']]]
-            ];
-        }
+        $this->isLoading = true;
 
         try {
-            $this->isLoading = true;
-
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-            ])->timeout(20)->post(
-                "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}",
-                [
-                    'contents' => $contents,
-                    'systemInstruction' => [
-                        'parts' => [[
-                            'text' => 'Kamu adalah Sorgummi AI, asisten virtual cerdas dan ramah yang ahli seputar tanaman sorgum (Sorghum bicolor), manfaat kesehatan sorgum, resep olahan sorgum, dan produk-produk dari brand Sorgummi. Jawab selalu dalam bahasa Indonesia yang natural dan ramah. Gunakan emoji sesekali agar percakapan terasa hangat. Gunakan format bullet-points atau numbered list bila ada beberapa poin. Jika ditanya hal di luar topik sorgum, arahkan percakapan kembali ke sorgum dengan sopan.'
-                        ]]
-                    ],
-                    'generationConfig' => [
-                        'temperature' => 0.7,
-                        'maxOutputTokens' => 1024,
-                    ]
-                ]
+            $messages = array_merge(
+                [['role' => 'system', 'content' => (string) config('sorgummi.system_prompt')]],
+                $this->chatHistory
             );
 
-            if ($response->successful()) {
-                $data = $response->json();
-                $reply = $data['candidates'][0]['content']['parts'][0]['text'] ?? 'Maaf, saya tidak mendapatkan respons yang valid.';
-                $this->chatHistory[] = ['role' => 'model', 'content' => $reply];
+            $result = app(SorgummiAiService::class)->chat($messages);
+
+            if ($result['ok']) {
+                $this->chatHistory[] = ['role' => 'model', 'content' => $result['reply']];
             } else {
-                $statusCode = $response->status();
-                $errorBody = $response->json();
-                $errorMessage = $errorBody['error']['message'] ?? 'Unknown error';
+                Log::error('Sorgummi AI: semua provider gagal', ['error' => $result['error']]);
 
-                Log::error("Gemini API Error [{$statusCode}]: {$errorMessage}");
-
-                $userMessage = match (true) {
-                    $statusCode === 400 => '⚠️ Permintaan tidak valid. Coba formulasikan pertanyaan Anda dengan cara berbeda.',
-                    $statusCode === 401 || $statusCode === 403 => '🔑 API Key tidak valid atau tidak memiliki akses. Periksa kembali GEMINI_API_KEY di file .env.',
-                    $statusCode === 404 => "🔧 Model AI \"{$model}\" tidak ditemukan. Mungkin model sudah deprecated. Periksa konfigurasi GEMINI_MODEL di .env.",
-                    $statusCode === 429 => '⏳ Terlalu banyak permintaan. Silakan tunggu sebentar lalu coba lagi.',
-                    $statusCode >= 500 => '🔧 Server Google AI sedang mengalami gangguan. Silakan coba lagi nanti.',
-                    default => "❌ Terjadi kesalahan (Kode: {$statusCode}). Silakan coba lagi.",
-                };
-
-                $this->chatHistory[] = ['role' => 'model', 'content' => $userMessage];
+                $this->chatHistory[] = [
+                    'role'    => 'model',
+                    'content' => "⚠️ Layanan AI sedang tidak bisa dihubungi.\n\n"
+                        ."Pastikan gateway 9router berjalan di `http://127.0.0.1:20128` "
+                        ."(atau isi kunci cadangan Gemini di `.env`), lalu coba lagi.\n\n"
+                        .'_Detail: '.e((string) $result['error']).'_',
+                ];
             }
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::error('Gemini Connection Timeout: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Sorgummi AI exception: '.$e->getMessage());
+
             $this->chatHistory[] = [
-                'role' => 'model',
-                'content' => '⏱️ Koneksi ke server AI timeout. Pastikan koneksi internet Anda stabil dan coba lagi.'
-            ];
-        } catch (\Exception $e) {
-            Log::error('Gemini Exception: ' . $e->getMessage());
-            $this->chatHistory[] = [
-                'role' => 'model',
-                'content' => '❌ Terjadi kesalahan tak terduga. Silakan coba lagi dalam beberapa saat.'
+                'role'    => 'model',
+                'content' => '❌ Terjadi kesalahan tak terduga. Silakan coba lagi dalam beberapa saat.',
             ];
         } finally {
             $this->isLoading = false;
         }
     }
 
-    public function resetChat()
+    public function resetChat(): void
     {
-        $this->chatHistory = [
-            ['role' => 'model', 'content' => 'Halo! Saya Sorgummi AI 🌾 Asisten virtual Anda seputar sorgum, kesehatan, resep, dan produk Sorgummi. Ada yang bisa saya bantu hari ini?']
-        ];
+        $this->chatHistory = [$this->greeting()];
         $this->message = '';
     }
 
     public function render()
     {
-        return view('livewire.sorgummi-ai')->layout('components.layouts.app', ['title' => 'Sorgummi AI']);
+        return view('livewire.sorgummi-ai')
+            ->layout('components.layouts.app', ['title' => 'Sorgummi AI']);
     }
 }

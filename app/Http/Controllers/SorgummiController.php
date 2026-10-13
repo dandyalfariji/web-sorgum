@@ -2,37 +2,41 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\SorgummiAiService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class SorgummiController extends Controller
 {
+    public function __construct(protected SorgummiAiService $ai)
+    {
+    }
+
+    /**
+     * Endpoint chat untuk widget Sorgummi AI.
+     */
     public function chat(Request $request)
     {
-        $request->validate([
-            'message' => 'required|string'
+        $validated = $request->validate([
+            'message' => 'required|string|max:2000',
         ]);
 
-        try {
-            // Forward the request to the Python microservice
-            $response = Http::timeout(60)->post('http://127.0.0.1:8001/chat', [
-                'message' => $request->message
+        $messages = [
+            ['role' => 'system', 'content' => (string) config('sorgummi.system_prompt')],
+            ['role' => 'user', 'content' => $validated['message']],
+        ];
+
+        $result = $this->ai->chat($messages);
+
+        if ($result['ok']) {
+            return response()->json([
+                'reply'    => $result['reply'],
+                'provider' => $result['provider'],
             ]);
-
-            if ($response->successful()) {
-                return response()->json($response->json());
-            }
-
-            return response()->json([
-                'error' => 'Gagal terhubung ke AI Service.',
-                'reply' => 'Maaf, layanan AI saat ini sedang tidak tersedia.'
-            ], 500);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => $e->getMessage(),
-                'reply' => 'Maaf, terjadi kesalahan internal sistem.'
-            ], 500);
         }
+
+        return response()->json([
+            'reply' => 'Maaf, layanan AI sedang tidak dapat dihubungi. Silakan coba beberapa saat lagi.',
+            'error' => 'Semua provider AI gagal: '.($result['error'] ?? 'tidak diketahui'),
+        ], 503);
     }
 }

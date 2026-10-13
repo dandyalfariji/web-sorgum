@@ -37,6 +37,9 @@ Route::get('/artikel/{article:slug}', function(\App\Models\Article $article) {
 // Sorgummi Chatbot Route
 Route::post('/sorgummi/chat', [\App\Http\Controllers\SorgummiController::class, 'chat'])->name('sorgummi.chat');
 
+// Halaman Sorgummi AI (target menu navigasi "Sorgummi AI" -> /ai)
+Route::get('/ai', \App\Livewire\SorgummiAi::class)->name('sorgummi.ai');
+
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
